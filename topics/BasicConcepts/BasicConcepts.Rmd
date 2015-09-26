@@ -1,0 +1,11 @@
+---
+title: "Basic Concepts in Missing Data"
+author: "William Murrah"
+output: html_document
+bibliography: bibfile.bib
+---
+
+A great book to learn about dealing missing data an how to deal with it is *Applied Missing Data Analysis* [@enders2010applied], which covers full information maximum likelihood and multiple imputation.
+Much of the material covered in this repository and accompanying tutorials is based on the book *Flexible Imputation of Missing Data* [@van2012flexible]
+
+## References
