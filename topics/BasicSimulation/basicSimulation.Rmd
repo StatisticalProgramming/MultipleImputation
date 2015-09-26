@@ -1,0 +1,108 @@
+---
+title: "Basic Simulation in R"
+author: "William Murrah"
+date: ""
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_knit$set(root.dir = "../../")
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+# This loads the mosaic data sets.  (Could be deleted if you are not using them.)
+require(mosaicData)                
+```
+
+## Why do I need to know how to simulate data?
+
+
+## Probability Distributions
+
+In R, enter the following code into the console:
+
+```{r, eval=FALSE}
+?distributions
+```
+
+```{r} 
+set.seed(082184) # Set the seed for reproducible results
+# Use the CDF to calculate the probability a random draw will be less than or equal to a given number
+pnorm(1.645)
+dnorm(1.5) # Use the PDF to calculate the density
+qnorm(.95) # Use the inverse CDF to calculate distribution values from quantiles
+rnorm(10) # Random draws
+```
+
+### Binomial Example
+```{r}
+set.seed(19445)
+# Use the CDF to calculate the probability of fewer than 10 successes
+pbinom(10, 50, .2)
+dbinom(17, 50, .2) # Use the PDF to calculate the probability of observing a value of 17
+qbinom(.5, 50, .2) # Use the inverse CDF to calculate distribution values from quantiles 
+rbinom(10, 50, .2) # Random draws
+```
+
+Text can be decorated with **bold** or *italics*.  It is also possible to 
+
+* create [links](http://rmarkdown.rstudio.com/) 
+* include mathematics like $e=mc^2$ or 
+$$
+y = \beta_0 + \beta_1 x_1 + \epsilon 
+$$
+
+
+Be sure to put a space after the * when you are creating bullets and a space after # when 
+creating section headers, but **not** between $ and the mathematical formulas.
+
+### Graphics
+
+If the code of an R chunk produces a plot, this plot can be displayed in the resulting file.
+```{r}
+xyplot(births ~ date, data=Births78)
+```
+
+
+This file can be knit to HTML, PDF, or Word.  In RStudio, just select the desired output file type
+and click on `Knit HTML`, `Knit PDF`, or `Knit Word`.  Use the dropdown menu next to that to 
+change the desired file type.
+
+### Documenting file creation 
+
+It's useful to record some information about how your file was created.
+
+  * File creation date: `r Sys.Date()`
+  * `r R.version.string`
+  * R version (short form): `r getRversion()`
+  * `mosaic` package version: `r packageVersion("mosaic")`
+  * Additional session information
+  
+```{r echo=FALSE}
+sessionInfo()  # could use devtools::session_info() if you prefer that
+```
+  
