@@ -19,6 +19,7 @@ output:
 # Don't delete this chunk if you are using the mosaic package
 # This loads the mosaic and dplyr packages
 require(mosaic)
+
 ```
 
 ```{r, include=FALSE}
@@ -31,15 +32,20 @@ trellis.par.set(theme=theme.mosaic())
 require(knitr)
 opts_knit$set(root.dir = "../../")
 opts_chunk$set(
+  comment = NULL,
   tidy=FALSE,     # display code as typed
   size="small"    # slightly smaller font for code
 )
 # This loads the mosaic data sets.  (Could be deleted if you are not using them.)
-require(mosaicData)                
+library(texreg)
+library(stargazer)               
 ```
 
 ## Why do I need to know how to simulate data?
 
+* It is closely related to several statistical procedures (e.g. bootstraping, MCMC)
+* It is closely related to multiple imputation
+* It is helpful in checking the assumptions of your model
 
 ## Probability Distributions
 
@@ -49,31 +55,112 @@ In R, enter the following code into the console:
 ?distributions
 ```
 
+### Some of the distributions available in R
+
+ R code  | distribution
+ --------|-------------
+`unif`   | uniform
+`norm`   | normal
+`binom`  | binomial 
+`chisq`  | chi-squared
+`t`      | Student's t
+
+
+### Distribution prefixes
+
+prefix  |  function
+--------|-----------
+`d`     | density or probability mass function (pmf)
+`p`     | cumulative distribution function (cdf)
+`q`     | quantiles
+`r`     | random number generation (actually peudo-random) 
+
+
 ```{r} 
 set.seed(082184) # Set the seed for reproducible results
-# Use the CDF to calculate the probability a random draw will be less than or equal to a given number
-pnorm(1.645)
-dnorm(1.5) # Use the PDF to calculate the density
-qnorm(.95) # Use the inverse CDF to calculate distribution values from quantiles
-rnorm(10) # Random draws
+
 ```
 
-### Binomial Example
 ```{r}
-set.seed(19445)
-# Use the CDF to calculate the probability of fewer than 10 successes
-pbinom(10, 50, .2)
-dbinom(17, 50, .2) # Use the PDF to calculate the probability of observing a value of 17
-qbinom(.5, 50, .2) # Use the inverse CDF to calculate distribution values from quantiles 
-rbinom(10, 50, .2) # Random draws
+x <- runif(n = 1000,
+           min =-3, 
+           max = 3)
+x[1:10]
+
+hist(x, 
+     col = 'skyblue', 
+     xlim=c(-5,5),
+     main = "1000 random samples from uniform distribution")
+```
+
+```{r}
+x <- rnorm(n = 1000, 
+           mean = 0, 
+           sd = 3)
+x[1:10]
+
+hist(x, 
+     col = 'skyblue', 
+     main = "1000 random samples from normal distribution")
 ```
 
 
-$$
-y = \beta_0 + \beta_1 x_1 + \epsilon 
-$$
+## Simple Simulation of Linear Regression Model
 
 
+```{r}
+achieve <- read.csv('data/Achieve.csv')
+achieve <- achieve[ ,c("geread", "gevocab", "gender")]
+achieve$gender <- achieve$gender - 1
+stargazer(achieve, type = 'text', column.sep.width = '25pt')
+```
+
+
+```{r , results='asis'}
+mod <- lm(geread ~ gevocab + gender, data = achieve)
+htmlreg(mod)
+```
+
+### Model equation
+$$
+y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \epsilon \tag{1}
+$$
+
+$$
+y = 1.95 + .53 \textrm{gevocab} + .03 \textrm{gender} + \epsilon \tag{2}
+$$
+
+$$
+\epsilon = N(0, \sigma) \tag{3}
+$$
+
+```{r, results='asis'}
+b0 <- 1.95
+b1 <- .53
+b2 <- .03
+n <- 10320
+sigma <- 1.97
+
+set.seed(123)
+gevocab <- rnorm(n = n, mean = 4.94, sd = 2.37)
+
+gender <- rep(0:1, n/2)
+
+geread <- b0 + b1*gevocab + b2*gender + rnorm(n = n, mean = 0, sd = sigma )
+
+sim.mod <- lm(geread ~ gevocab + gender)
+htmlreg(list(mod, sim.mod), custom.model.names = c("original", "simulated"))
+```
+
+
+```{r, fig.height=8, fig.width= 16}
+par(mfrow = c(1,2))
+plot(geread ~ gevocab, data = achieve, main = "original")
+plot(geread ~ gevocab, main = "simulated")
+cor(achieve)
+cor(geread, gevocab)
+range(geread)
+```
 
 ### Session Information
 
