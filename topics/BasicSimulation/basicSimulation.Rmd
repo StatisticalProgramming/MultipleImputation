@@ -104,7 +104,6 @@ hist(x,
      main = "1000 random samples from normal distribution")
 ```
 
-
 ## Simple Simulation of Linear Regression Model
 
 

@@ -2,6 +2,7 @@
 
 library(texreg)
 library(stargazer)
+library(boot)
 achieve <- read.csv('data/Achieve.csv')
 achieve <- achieve[ ,c("geread", "gevocab", "gender")]
 achieve$gender <- achieve$gender - 1
@@ -30,8 +31,6 @@ plot(geread ~ gevocab)
 cor(achieve)
 cor(geread, gevocab)
 range(geread)
-
-
 
 # simulate missingness ----------------------------------------------------
 n = 10000

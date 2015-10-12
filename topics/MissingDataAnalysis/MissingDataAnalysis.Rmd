@@ -1,0 +1,91 @@
+---
+title: "Missing Data Analysis"
+author: 'William Murrah'
+date: ''
+output:
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_knit$set(root.dir = "../../")
+opts_chunk$set(
+  message = FALSE,
+  comment = NULL,
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+
+## Data we will use:
+
+```{r}
+#  ?nhanes
+data("nhanes2")
+```
+
+```{r}
+achieve <- read.csv('data/Achieve.csv')
+achieve <- achieve[ ,c("geread", "gevocab", "gender", "age")]
+achieve$gender <- achieve$gender - 1
+achieve$age <- achieve$age/12
+
+```
+
+```{r}
+mod <- lm(geread ~ gevocab + gender + age, data = achieve)
+summary(mod)
+```
+
+```{r}
+# b0 <-  1.97
+# b1 <-  0.53
+# b2 <-  0.04
+# n <- 10320
+# sigma <- 1.97
+# 
+# set.seed(123)
+# gevocab <- rnorm(n = n, mean = 4.94, sd = 2.37)
+# gender <- rep(0:1, n/2)
+# 
+# geread <- b0 + b1*gevocab + b2*gender + rnorm(n = n, mean = 0, sd = sigma )
+# simdata <- data.frame(read = geread, 
+#                       vocab = gevocab,
+#                       female = factor(gender, 
+#                                       labels = c("male", "female")))
+```
+
+```{r}
+# logistic <- function(x) exp(x)/(1 + exp(x))
+# inv.logit()
+# set.seed(1234)
+# r.mcar <- 1 - rbinom(n, 1, 0.50)
+# r.mar <- 1 - rbinom(n, 1, logistic(simdata$vocab))
+# set.seed(1234)
+# r.mnar <- 1 - rbinom(n, 1, inv.logit(simdata$read))
+```
+
+```{r echo=FALSE}
+sessionInfo()  # could use devtools::session_info() if you prefer that
+```
+  
