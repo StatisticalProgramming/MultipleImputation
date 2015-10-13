@@ -38,6 +38,14 @@ opts_chunk$set(
 require(texreg)  
 require(mice)
 require(VIM)
+
+```
+
+```{r}
+doctype <- 
+   # "pdf"
+  "html"
+txreg <- ifelse(doctype == "pdf", texreg, htmlreg)
 ```
 
 ## Notation we will use:
@@ -124,9 +132,24 @@ md.pattern(pattern4)
 
 ```
 
+```{r}
+aggr(general, numbers = TRUE, prop = FALSE)
+```
 
+```{r., warning=FALSE}
+# matrixplot(general, sortby = "A")
+```
 
 \newpage
+
+## Predictors of missingness
+
+```{r, results='asis'}
+pmA <- glm(is.na(A) ~ B + C, family = binomial, data = general)
+pmB <- glm(is.na(B) ~ A + C, family = binomial, data = general)
+pmC <- glm(is.na(C) ~ A + B, family = binomial, data = general)
+txreg(list(pmA, pmB, pmC), custom.model.names = c("pmA", "pmB", "pmC"))
+```
 
 ## Session Information
 
