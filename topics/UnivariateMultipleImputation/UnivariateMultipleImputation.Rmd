@@ -1,0 +1,173 @@
+---
+title: "Univariate Multiple Imputation"
+author: "William Murrah"
+date: ''
+output:
+  html_document:
+    fig_height: 6
+    fig_width: 6
+  pdf_document:
+    fig_height: 6
+    fig_width: 6
+  word_document:
+    fig_height: 6
+    fig_width: 6
+---
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_knit$set(root.dir = "../../")
+opts_chunk$set(
+  message = FALSE,
+  comment = NULL,
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+## Packages we will use:
+```{r}
+require(texreg)  
+require(mice)
+require(VIM)
+require(ztable)
+require("mice")
+require("gamlss")
+require("rpart")
+require(psych)
+```
+
+```{r}
+doctype <- 
+   # "latex"
+   "html"
+txreg <- ifelse(doctype == "latex", texreg, htmlreg)
+options(ztable.type = doctype)
+```
+
+
+## Data example
+
+Mr. Whiteside recorded gas consumption and outside temperature at his house for two winters (1960 and 1961). His thermostat was kept at 20$^\circ$C.
+```{r , echo=FALSE}
+mice.impute.normdump <- function (y, ry, x, ...) 
+{
+  x <- cbind(1, as.matrix(x))
+  parm <- .norm.draw(y, ry, x, ...)
+  betadump <<- c(betadump,parm$beta) 
+  return(x[!ry, ] %*% parm$beta + rnorm(sum(!ry)) * parm$sigma)
+}
+mice.impute.pmmdump <- function (y, ry, x, ...) 
+{
+  x <- cbind(1, as.matrix(x))
+  parm <- .norm.draw(y, ry, x, ...)
+  yhatobs <- x[ry, ] %*% parm$coef
+  yhatmis <- x[!ry, ] %*% parm$beta
+  betadump <<- c(betadump,parm$beta)
+  return(apply(as.array(yhatmis), 1, .pmm.match, yhat = yhatobs, 
+               y = y[ry], ...))
+}
+
+### Figure 3.1
+data <- whiteside
+lwd <- 2.5
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+points(x=5, y=3.6, pch=4, cex=2, lwd=lwd, col=mdc(2))
+legend(x="bottomleft", legend="deleted observation", pch=4, col=mdc(2), 
+       pt.lwd=lwd, bty="n", pt.cex=2)
+text(x=9, y=6.5, label="a",cex=2)
+```
+
+We remove one data point in the outcome `Gas` at row 47, which was 3.6 cubic feet, and has a temperature value of 5$^\circ$ Celsius.
+
+
+```{r}
+data[47,"Gas"] <- NA
+
+headTail(data, tlength = 10) # from `psych` package
+```
+
+
+## Predict Method
+We simply regress the outcome with missing data on our complete predictor and use the model to impute the missing value(s). This give us the "best" value, but this method does not reflect the uncertainty in our imputation. Note that there is no reason to do multiple imputations 
+$$
+\dot{y}_{mis} = \beta_0 + \beta_1 X_{mis} \tag{1} 
+$$
+
+
+```{r, results='asis'}
+pred1 <- lm(Gas ~ Temp, data)
+
+txreg(pred1, custom.model.names = "Predict")
+imp1 <- predict(pred1, data.frame(Temp = c(5)))
+imp1
+```
+
+$$
+\dot{y}_{47} = \beta_0 + \beta_1 X_{47}  \tag{2}
+$$
+
+$$
+4.04 = 5.49 - 0.29(5.0) 
+$$
+
+
+```{r , echo=FALSE}
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+abline(m1<-lm(Gas~Temp, data=data, na.action=na.omit), col=mdc(4))
+points(5,4.04, lwd=lwd, col=mdc(2),pch=19)
+text(x=9, y=6.5, label="b",cex=2)
+```
+
+
+## Predict + Noise Method
+
+```{r}
+sd(pred1$residuals)
+set.seed(45433)
+y.47 <- 5.49 - 0.29*5 + rnorm(n = 5, mean = 0, sd = .86)
+sort(y.47)
+```
+
+```{r}
+imp <- mice(data, m=1, maxit=0)
+pred <- imp$pred
+pred
+pred["Gas","Insul"] <- 0
+pred
+imp <- mice(data, m=5, pred=pred, meth="norm.nob", maxit=1, print=FALSE, seed=45433)
+imp$imp$Gas
+```
+
+
+```{r, echo = FALSE}
+
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+
+abline(m1<-lm(Gas~Temp, data=data, na.action=na.omit), col=mdc(4))
+points(rep(5,5),imp$imp$Gas, lwd=lwd, col=mdc(2),pch=19)
+text(x=9, y=6.5, label="c",cex=2)
+
+```
+
+```{r echo=FALSE}
+sessionInfo()  # could use devtools::session_info() if you prefer that
+```
+  
