@@ -1,0 +1,284 @@
+---
+title: "Univariate Multiple Imputation"
+author: "William Murrah"
+date: ''
+output:
+  html_document:
+    fig_height: 6
+    fig_width: 6
+  pdf_document:
+    fig_height: 6
+    fig_width: 6
+  word_document:
+    fig_height: 6
+    fig_width: 6
+---
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_knit$set(root.dir = "../../")
+opts_chunk$set(
+  message = FALSE,
+  comment = NULL,
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+## Packages we will use:
+```{r}
+require(texreg)  
+require(mice)
+require(VIM)
+require(ztable)
+require(mice)
+require(gamlss)
+require(rpart)
+require(psych)
+source("~/Rfunc/miralm.R")
+```
+
+```{r}
+doctype <- 
+   # "latex"
+   "html"
+txreg <- ifelse(doctype == "latex", texreg, htmlreg)
+options(ztable.type = doctype)
+```
+
+
+## Data example
+
+Mr. Whiteside recorded gas consumption and outside temperature at his house for two winters (1960 and 1961). His thermostat was kept at 20$^\circ$C.
+
+```{r}
+data <- whiteside
+headTail(data, tlength = 10) # from `psych` package
+```
+
+```{r}
+pred0 <- lm(Gas ~ Temp, data)
+```
+
+```{r , echo=FALSE}
+mice.impute.normdump <- function (y, ry, x, ...) 
+{
+  x <- cbind(1, as.matrix(x))
+  parm <- .norm.draw(y, ry, x, ...)
+  betadump <<- c(betadump,parm$beta) 
+  return(x[!ry, ] %*% parm$beta + rnorm(sum(!ry)) * parm$sigma)
+}
+mice.impute.pmmdump <- function (y, ry, x, ...) 
+{
+  x <- cbind(1, as.matrix(x))
+  parm <- .norm.draw(y, ry, x, ...)
+  yhatobs <- x[ry, ] %*% parm$coef
+  yhatmis <- x[!ry, ] %*% parm$beta
+  betadump <<- c(betadump,parm$beta)
+  return(apply(as.array(yhatmis), 1, .pmm.match, yhat = yhatobs, 
+               y = y[ry], ...))
+}
+
+### Figure 3.1
+
+lwd <- 2.5
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+points(x=5, y=3.6, pch=4, cex=2, lwd=lwd, col=mdc(2))
+legend(x="bottomleft", legend="deleted observation", pch=4, col=mdc(2), 
+       pt.lwd=lwd, bty="n", pt.cex=2)
+text(x=9, y=6.5, label="a",cex=2)
+```
+
+We remove one data point in the outcome `Gas` at row 47, which was 3.6 cubic feet, and has a temperature value of 5$^\circ$ Celsius.
+
+
+```{r}
+data[47,"Gas"] <- NA
+
+headTail(data, tlength = 10) # from `psych` package
+```
+
+
+## Predict method
+We simply regress the outcome with missing data on our complete predictor and use the model to impute the missing value(s). This give us the "best" value, but this method does not reflect the uncertainty in our imputation. Note that there is no reason to do multiple imputations 
+$$
+\dot{y}_{mis} = \beta_0 + \beta_1 X_{mis} \tag{1} 
+$$
+
+
+```{r, results='asis'}
+pred1 <- lm(Gas ~ Temp, data)
+
+txreg(pred1, custom.model.names = "Predict")
+imp1 <- predict(pred1, data.frame(Temp = c(5)))
+imp1
+```
+
+$$
+\dot{y}_{47} = \beta_0 + \beta_1 X_{47}  \tag{2}
+$$
+
+$$
+4.04 = 5.49 - 0.29(5.0) 
+$$
+
+
+```{r , echo=FALSE}
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+abline(m1<-lm(Gas~Temp, data=data, na.action=na.omit), col=mdc(4))
+points(5,4.04, lwd=lwd, col=mdc(2),pch=19)
+text(x=9, y=6.5, label="b",cex=2)
+```
+
+
+## Predict + noise method
+
+We can improve the imputation method by adding random noise to the process. But how much noise? If we assume that the errors are normally distributed around the regression line, then we can take the standard deviation of the errors $\sigma$ as our basis for generating the random noise by drawing random errors from a normal distribution with mean `0` and a standard deviation of $\sigma$.
+```{r}
+sd(pred1$residuals)
+set.seed(45433)
+y.47 <- 5.49 - 0.29*5 + rnorm(n = 5, mean = 0, sd = .86)
+sort(y.47)
+```
+
+```{r}
+imp <- mice(data, m=1, maxit=0)
+pred <- imp$pred
+pred
+pred["Gas","Insul"] <- 0
+pred
+imp2 <- mice(data, m=5, pred=pred, meth="norm.nob", maxit=1, print=FALSE, seed=45433)
+imp2$imp$Gas
+```
+
+
+```{r, echo = FALSE}
+
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+
+abline(m1<-lm(Gas~Temp, data=data, na.action=na.omit), col=mdc(4))
+points(rep(5,5),imp2$imp$Gas, lwd=lwd, col=mdc(2),pch=19)
+text(x=9, y=6.5, label="c",cex=2)
+
+```
+
+```{r, results='asis'}
+fit <- with(imp2, lm(Gas ~ Temp))
+pl <- pool(fit)
+pred2 <- extract.miralm(miralm(fit, n.obs = 56))
+txreg(list(pred0, pred1, pred2), custom.model.names = c("Original","Predict", "Predict+Noise"))
+```
+
+## Predict + noise + parameter uncertainty
+
+The previous model is better, but still not right. Until now, all mothods have required us to know the population model (intercept, coefficients, and sigma) for correct inference. However, we typically don't know these values, and instead estimate them, and their values will vary across samples from the population. There are two primary methods for doing this: Bayesian and bootstap.
+```{r}
+
+imp <- mice(data, m=1, maxit=0)
+pred <- imp$pred
+pred
+pred["Gas","Insul"] <- 0
+pred
+```
+
+```{r}, echo=FALSE}
+## Ignore following code
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+betadump <- vector("list", 0) 
+imp <- mice(data, m=5, pred=pred, meth="normdump", maxit=1, print=FALSE, seed=83126)
+abline(m1<-lm(Gas~Temp, data=data, na.action=na.omit), col=mdc(4))
+betadump <- matrix(betadump, nc=2, byrow=TRUE)
+for (i in 1:5) abline(coef=unlist(betadump[i,]), col=mdc(5))
+points(rep(5,5),imp$imp$Gas, lwd=lwd, col=mdc(2),pch=19)
+text(x=9, y=6.5, label="d",cex=2)
+```
+
+
+## A second predictor
+```{r}
+pch <- c(rep(3,26),rep(1,30))
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, pch=pch, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+imp <- mice(data, m=5, meth="norm", maxit=1, print=FALSE, seed=11727)
+abline(m1<-lm(Gas~Temp, data=data, na.action=na.omit, subset=Insul=="Before"), col=mdc(4))
+abline(m2<-lm(Gas~Temp, data=data, na.action=na.omit, subset=Insul=="After"), col=mdc(4))
+points(rep(5,5),imp$imp$Gas, lwd=lwd, col=mdc(2),pch=19)
+legend(x="bottomleft", legend=c("before insulation","after insulation"), pch=c(3,1),bty="n", pt.lwd=lwd)
+text(x=9, y=6.5, label="e",cex=2)
+```
+
+## Drawing from the observed data
+```{r}
+pch <- c(rep(3,26),rep(1,30))
+plot(x=data$Temp, y=data$Gas, col=mdc(1), lwd=lwd, pch=pch, 
+     xlab=expression(paste("Temperature (", degree, "C)")), 
+     ylab="Gas consumption (cubic feet)")
+betadump <- vector("list", 0) 
+imp <- mice(data, m=5, meth="pmmdump", maxit=1, print=FALSE, seed=68006)
+betadump <- matrix(betadump, nc=3, byrow=TRUE)
+m1<-lm(Gas~Temp+Insul, data=data, na.action=na.omit)
+an <- coef(m1)[1]
+ai <- an + coef(m1)[3]
+b <- coef(m1)[2]
+abline(a=ai, b=b, col=mdc(4))
+abline(a=an, b=b, col=mdc(4))
+eta <- 0.6
+ylo <- ai+b*(5-eta)
+yhi <- ai+b*(5+eta)
+lines(x=c(5-eta,5+eta),y=c(ylo,yhi),lwd=3,col=mdc(5))
+xlo <- (ylo-an)/b
+xhi <- (yhi-an)/b
+lines(x=c(xlo,xhi),y=c(ylo,yhi),lwd=3,col=mdc(5))
+
+donors <- subset(data, (Insul=="After"&Temp>5-eta&Temp<5+eta) 
+                 |    (Insul=="Before"&Temp>xlo&Temp<xhi))
+points(x=donors$Temp, y=donors$Gas, cex=1.8, col=mdc(5), lwd=lwd)
+legend(x="bottomleft", legend=c("before insulation","after insulation"), pch=c(3,1),bty="n", pt.lwd=lwd)
+text(x=9, y=6.5, label="f",cex=2)
+```
+
+
+## Revisiting missing data patterns
+```{r}
+data <- whiteside
+set.seed(1234)
+miss.idx <- sample(1:56, 8)
+miss.idx
+p1.idx <- miss.idx[1:4]
+p2.idx <- miss.idx[5:8]
+data[p1.idx, "Gas"] <- NA
+data[p2.idx, c("Temp", "Gas")] <- NA
+
+aggr(data, numbers = TRUE, prop = FALSE)
+
+data_pat1 <- data[-p2.idx, ]
+data_pat2 <- data[-p1.idx, ]
+
+aggr(data_pat2, numbers = TRUE, prop = FALSE)
+```
+
+
+```{r echo=FALSE}
+sessionInfo()  # could use devtools::session_info() if you prefer that
+```
+  

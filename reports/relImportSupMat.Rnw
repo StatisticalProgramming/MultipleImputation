@@ -1,0 +1,350 @@
+\documentclass [doc,a4paper, american, mask]{apa6}
+\usepackage[affil-it]{authblk}
+\usepackage{graphicx}
+\usepackage [toc, page]{appendix}
+\usepackage{booktabs}
+\usepackage{fancyvrb}
+\usepackage{adjustbox}
+\usepackage{fullpage,dcolumn,rotating,pdflscape,longtable}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=blue,
+    urlcolor=black
+}
+
+%% bibliography
+% \usepackage[american]{babel}
+% \usepackage{csquotes}
+% \usepackage[style=apa,sortcites=true, natbib=true,sorting=nyt,backend=bibtex]{biblatex}
+% \DeclareLanguageMapping{american}{american-apa}
+% \bibliography{biblio.bib}
+
+%% bibliography
+\usepackage[american]{babel}
+\usepackage{csquotes}
+\usepackage[style=authoryear-comp,sortcites=true,natbib=true,sorting=nyt, backend=bibtex]{biblatex}
+% \usepackage[style=biblatex-apa,sortcites=true,natbib=true,sorting=nyt, backend=biber]{biblatex}
+
+\DeclareNameAlias{sortname}{last-first}
+\bibliography{relimportbib.bib}
+\addbibresource{relimportbib.bib}
+
+\begin{document}
+\setlength{\parindent}{20pt}
+\title{Supplimental Materials: The Changing Importance of School Readiness Skills for Elementary to Middle School Achievement}
+\shorttitle{Relative Importance of School Readiness Skills}
+\author{William M. Murrrah and David Grissmer }
+\affiliation{University of Virginia}
+\note{Do not cite without author's permission}
+\authornote{Contact author (William Murrah) at wmm4w@virginia.edu}
+\maketitle
+\tableofcontents
+\clearpage
+
+<<opts, echo=FALSE, warning=FALSE, message=FALSE, comment = "">>=
+opts_chunk$set(echo=FALSE, warnings=FALSE, message=FALSE, comment = "")
+os <- Sys.info()['sysname']
+root <- ifelse(os == 'Windows', 
+               'C:/',
+               '~/')
+root.dir <- paste0(root,"FOCAL/NSFscoreGaps/eclskRelImportance")
+opts_knit$set(root.dir=root.dir)
+
+@
+
+<<data, results='hide', warning=FALSE>>=
+source('data/mungeECLSK_DP1.R')
+# Get function to create Coeffieicent summary tables for results.
+source('R/RelimportTableLong.R')
+# R packages used
+library(mice)
+library(VIM)
+library(xtable)
+library(texreg)
+library(tables)
+library(psych)
+# subset ecslk to include only model variables.
+df <- eclsk[ , c("kage.m", "c1.tdif","region", "urban", 
+                     "race", "male", "twobiopr",
+                     "mombage", "momed", "daded", "faminc",
+                     "numsib", "fmotor", "gmotor", "t2learn", "t2contro",
+                     "t2interp", "t2extern", "t2intern",                                         
+                     "c1read", "c1math", "c1genk", 
+                     "c2read", "c2math", "c2genk", 
+                     "c4read", "c4math", 
+                     "c5read", "c5math", "c5sci", 
+                     "c6read", "c6math", "c6sci", 
+                     "c7read", "c7math", "c7sci"
+                      )]
+pred.df <- df[ , c("kage.m", "c1.tdif", "region", "urban", "race", 
+                   "male", "twobiopr", "mombage", "momed", "daded", 
+                   "faminc", "numsib", "fmotor", "gmotor", "t2learn", 
+                   "t2contro", "t2interp", "t2extern", "t2intern", 
+                   "c1read", "c1math", "c1genk")]
+oc.df   <- df[ , c("c4read", "c4math", 
+                   "c5read", "c5math", "c6read", 
+                   "c6math", "c7read", "c7math")]
+fam.oc <- df[ ,c("kage.m", "c1.tdif", "region", "urban", "race", 
+                   "male", "twobiopr", "mombage", "momed", "daded", 
+                   "faminc", "numsib",
+                 "c4read", "c4math", 
+                   "c5read", "c5math", "c6read", 
+                   "c6math", "c7read", "c7math")]
+cog.oc <- df[ ,c("fmotor", "gmotor", "t2learn", 
+                   "t2contro", "t2interp", "t2extern", "t2intern", 
+                   "c1read", "c1math", "c1genk",
+                 "c4read", "c4math", 
+                   "c5read", "c5math", "c6read", 
+                   "c6math", "c7read", "c7math")]
+@
+
+\section{Introduction}
+
+This document includes information related to decisions related to addressing missing data and tables including more extensive information related to the standardized regression coefficients, correlations, and relative importance weights. We include them here for those interested in more details about the analyses. For example, coefficeints for the family and background variables used as controls in the regressions are included here, but were not included in the paper, which focused on the school readiness skills. To save space we use the variable names used in our database. To help the reader, Table 1 includes a brief description of the meaning of these variale names.
+
+<<variableKey, results='asis'>>=
+ovar <- c("kage.m", "c1.tdif","region", "urban", 
+          "race", "male", "twobiopr",
+          "mombage", "momed", "daded", "faminc",
+          "numsib", "fmotor", "gmotor", "t2learn", "t2contro",
+          "t2interp", "t2extern", "t2intern",                                         
+          "c1read", "c1math", "c1genk", 
+          "c2read", "c2math", "c2genk", 
+          "c4read", "c4math", "c4genk", 
+          "c5read", "c5math", "c5sci", 
+          "c6read", "c6math", "c6sci", 
+          "c7read", "c7math", "c7sci"
+)
+
+var.names <- c("Age (months)","Test Adj.", "Region", "Urban",
+               "Race", 
+               "Male", "2 biological parents",
+               "Mother's age at birth",
+               "Mother's education", "Father'-high school's education",
+               "Family income",
+               "Number of siblings",
+               "Fine motor skills", "Gross motor skills", "Attention",
+               "Self-control", "Interpersonal skills", "Externalizing behavior",
+               "Internalizing behavior",
+               "Fall kindergarten reading","Fall kindergarten math",
+               "Fall kindergarten general knowledge", 
+               "Spring kindergarten reading","Spring kindergarten math",
+               "Spring kindergarten general knowledge", 
+               "First grade reading",
+               "First grade math",
+               "First grade general knowledge",
+               "Third grade reading",
+               "Third grade math",
+               "Third grade science",
+               "Fifth grade reading",
+               "Fifth grade math",
+               "Fifth grade science",
+               "Eighth grade reading",
+               "Eighth grade math",
+               "Eighth grade science")
+
+nam.df <- data.frame(Variable=ovar, Description=var.names)
+print(xtable(nam.df, caption='Variable Names with Brief Descriptions'), 
+      caption.placement='top')
+@
+
+\section{Missing Data Analyses}
+
+Table 2 includes the number of missing observations and the percent missing in each variable of the analytic sample ($n$ = \Sexpr{nrow(df)}) of the Early Childhood Longitudinal Study, Kindergarten Cohort (ECLS-K). Figure 1 includes graphics depicting the proportion of missingness in the predictor variables, and a matrix of the missing data patterns. Figure 2 includes the same information for the various achievement outcomes available in the ECLS-K. See the R package \texttt{VIM} for more information about how to interpret these graphs \parencite{vim}. 
+
+<<missPcnt, results='asis',fig.pos='H'>>=
+miss.sum <- summary(aggr(df,plot=FALSE))
+miss.cnt <- miss.sum$missings
+miss.cnt$pcnt.miss <- paste(round((miss.cnt$Count/nrow(df))*100,2)," %")
+names(miss.cnt)[3] <- 'Percent Missing'
+print(xtable(miss.cnt,align=c('l','l','c','c'), 
+             caption ='Missing Data Summary' ), caption.placement='top',
+      include.rownames=FALSE)
+@
+\clearpage
+
+<<missPatterns1, results='asis',fig.cap='Missing Data Patterns in Predictors', fig.pos='H',fig.width=12>>=
+aggr(pred.df)
+@
+\clearpage
+
+<<missPatterns2, results='asis',fig.cap='Missing Data Patterns in Outcomes'>>=
+aggr(oc.df)
+@
+\clearpage
+\begin{landscape}
+<<cortab1, results='asis'>>=
+n <- ncol(fam.oc)
+names(fam.oc) <- paste(1:n, names(fam.oc))
+cor2latex(data.matrix(fam.oc), short.names=TRUE,font.size='tiny')
+@
+\clearpage
+<<cortab2, results='asis'>>=
+n <- ncol(cog.oc)
+names(cog.oc) <- paste(1:n, names(cog.oc))
+cor2latex(data.matrix(cog.oc), short.names=TRUE,font.size='tiny')
+@
+\clearpage
+% \subsection{Proportion of Usable Information}
+<<propUsableCases, results='asis', fig.pos='h'>>=
+ p <- md.pairs(df)
+i.jk <- data.frame(round(p$mr/(p$mr + p$mm),2))
+i.pred <- i.jk[ ,names(i.jk )%in% names(pred.df) ]
+names(i.pred) <- 1:length(names(i.pred))
+rownames(i.pred) <- paste(1:length(names(i.pred)),rownames(i.pred))
+print(xtable(i.pred), scalebox='0.90')
+ @
+
+ 
+<<propUsableCases2, results='asis', fig.pos='h'>>=
+xtable(flux(df))
+@
+\end{landscape}
+
+<<flux, results='asis'>>=
+fluxplot(df)
+@
+\clearpage
+\section{Standardized Regression Results}
+
+The regression tables in this section contain the standardized regression coefficients for all variables in the models reported in the paper. We also included coefficients from models for the spring of kindergarten and the fall of fifth grade, which were not reported in the paper. These models are the pooled results over all 50 imputed data sets.
+
+
+\clearpage
+% \begin{landscape}
+% \subsection{Reading}
+<<fullReadReg, results='asis'>>=
+source('R/miralm.R')
+source('R/eclskMIlm.R')
+mod.names <- (c("Kindergarten","1st","3rd","5th","8th"))
+var.names <- c("(Intercept)","Age (months)","Test Adj.","Black","Hispanic",
+               "Asian","Native Am.","Male", "2 biological parents",
+               "Mother's age at birth",
+               "Mother-high school",
+               "Mother-high school plus","Mother-college",
+               "Mother-college plus",
+               "Father-high school",
+               "Father-high school plus","Father-college","Father-college plus",
+               "Family income",               
+               "Number of siblings",
+               "Midwest", "South", "West", "Suburban", "Rural",
+               "Fine motor skills", "Gross motor skills","Attention",
+               "Self-control",
+               "Interpersonal skills", "Externalizing","Internalizing",
+               "Kindergarten reading", "Kindergarten math",        
+               "Kindergarten general knowledge")
+
+load('analyses/miRegModels/readkLm.Rdata')
+load('analyses/miRegModels/read1Lm.Rdata')
+load('analyses/miRegModels/read3Lm.Rdata')
+load('analyses/miRegModels/read5Lm.Rdata')
+load('analyses/miRegModels/read8Lm.Rdata')
+texreg(list(readk.lm,read1.lm,read3.lm,read5.lm,read8.lm), single.row=T, float.pos='h', scalebox=.75,
+          custom.coef.names=var.names, custom.model.names=mod.names,
+       caption='Standardized Regression Models Predicting Kindergarten - 8th Grade Reading Using Sampling Weights', caption.above=T, use.packages=F, dcolumn=T)
+@
+\clearpage
+% \subsection{Math}
+<<fullMathReg, results='asis'>>=
+load('analyses/miRegModels/mathkLm.Rdata')
+load('analyses/miRegModels/math1Lm.Rdata')
+load('analyses/miRegModels/math3Lm.Rdata')
+load('analyses/miRegModels/math5Lm.Rdata')
+load('analyses/miRegModels/math8Lm.Rdata')
+texreg(list(mathk.lm,math1.lm,math3.lm,math5.lm,math8.lm), single.row=T, float.pos='h',  scalebox=.75,
+          custom.coef.names=var.names, custom.model.names=mod.names,
+       caption='Standardized Regression Models Predicting Kindergarten - 8th Grade Math Using Sampling Weights', caption.above=T, use.packages=F, dcolumn=T)
+@
+% \end{landscape}
+\clearpage
+\section{Relative Importance Metrics}
+
+As stated in the paper, The relative importance $\epsilon$ weights were calculated with the R package \texttt{yhat} \parencite{yhat}. Tables 8 - 12 contain information in tables 6-11 of the paper, with the addition of the family and background variables. Similarly, tables 13 and 14 below contain the information found in tables 12 and 13 of the paper, with the addition of family and background variables. The R code used to generate pooled relative importance weights and other tables will be made available by the first author upon request.
+
+\clearpage
+\begin{table}[ht]
+\caption{Relative Importance Metrics for Preditors of Spring of First Grade Reading}
+<<riread1, results='asis', cache=TRUE>>=
+load('analyses/miRegModels/read1Lm.Rdata')
+load('analyses/miRWdfs/riread1.Rdata')
+RelimportTableLong(coef.idx = 2:35, miralm.mod = read1.lm, ri.df = ri.read1, var.names=var.names)
+
+@
+\end{table}
+\clearpage
+
+\clearpage
+\begin{table}[ht]
+\caption{Relative Importance Metrics for Preditors of Spring of Third Grade Reading}
+<<riread3, results='asis', cache=TRUE>>=
+load('analyses/miRegModels/read3Lm.Rdata')
+load('analyses/miRWdfs/riread3.Rdata')
+RelimportTableLong(coef.idx = 2:30, miralm.mod = read3.lm, ri.df = ri.read3, var.names=var.names)
+@
+\end{table}
+\clearpage
+
+\begin{table}[ht]
+\caption{Relative Importance Metrics for Preditors of Spring of 8th Grade Reading}
+<<riread8, results='asis', cache=TRUE>>=
+load('analyses/miRegModels/read8Lm.Rdata')
+load('analyses/miRWdfs/riread8.Rdata')
+RelimportTableLong(coef.idx = 2:30, miralm.mod = read8.lm, ri.df = ri.read8, var.names=var.names)
+@
+\end{table}
+\clearpage
+\begin{table}[ht]
+\caption{Relative Importance Metrics for Preditors of Spring of First Grade Math}
+<<rimath1, results='asis', cache=TRUE>>=
+load('analyses/miRegModels/math1Lm.Rdata')
+load('analyses/miRWdfs/rimath1.Rdata')
+RelimportTableLong(coef.idx = 2:30, miralm.mod = math1.lm, ri.df = ri.math1, var.names=var.names)
+@
+\end{table}
+
+\clearpage
+\begin{table}[ht]
+\caption{Relative Importance Metrics for Preditors of Spring of Third Grade Math}
+<<rimath3, results='asis', cache=TRUE>>=
+load('analyses/miRegModels/math3Lm.Rdata')
+load('analyses/miRWdfs/rimath3.Rdata')
+RelimportTableLong(coef.idx = 2:30, miralm.mod = math3.lm, ri.df = ri.math3, var.names=var.names)
+@
+\end{table}
+
+\clearpage
+\begin{table}[ht]
+\caption{Relative Importance Metrics for Preditors of Spring of 8th Grade Math}
+<<rimath8, results='asis', cache=TRUE>>=
+load('analyses/miRegModels/math8Lm.Rdata')
+load('analyses/miRWdfs/rimath8.Rdata')
+RelimportTableLong(coef.idx = 2:30, miralm.mod = math8.lm, ri.df = ri.math8, var.names=var.names)
+@
+\end{table}
+\clearpage
+\begin{table}[ht]
+\caption{Proportion of Explained Variance in Reading from Kindergarten to Eighth Grade}
+<<readTab, results='asis'>>=
+load('analyses/miRWdfs/readTab.Rdata')
+latex(tabular(RowFactor(1:34, "$predictor$", rownames(readTab), spacing=0) ~ 
+                All(readTab, factor=as.character)*Heading()*identity, 
+              data=readTab))
+@
+\end{table}
+\clearpage
+\begin{table}[ht]
+\caption{Proportion of Explained Variance in Math from Kindergarten to Eighth Grade}
+<<mathTab, results='asis'>>=
+load('analyses/miRWdfs/mathTab.Rdata')
+latex(tabular(RowFactor(1:34, "$predictor$", rownames(mathTab), spacing=0) ~ 
+                All(mathTab, factor=as.character)*Heading()*identity, 
+              data=mathTab))
+@
+\end{table}
+
+\printbibliography
+
+\end{document}

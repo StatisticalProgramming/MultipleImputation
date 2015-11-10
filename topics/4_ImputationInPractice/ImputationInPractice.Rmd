@@ -1,0 +1,125 @@
+---
+title: "Imputation in Practice"
+author: "William Murrah"
+date: ''
+output:
+  html_document:
+    fig_height: 6
+    fig_width: 6
+  pdf_document:
+    fig_height: 6
+    fig_width: 6
+  word_document:
+    fig_height: 6
+    fig_width: 6
+---
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_knit$set(root.dir = "../../")
+opts_chunk$set(
+  message = FALSE,
+  comment = NULL,
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+## Packages we will use:
+```{r}
+require(texreg)  
+require(mice)
+require(VIM)
+require(ztable)
+require(mice)
+require(psych)
+source("~/Rfunc/miralm.R")
+```
+
+```{r}
+doctype <- 
+   # "latex"
+   "html"
+txreg <- ifelse(doctype == "latex", texreg, htmlreg)
+options(ztable.type = doctype)
+```
+
+
+## Data example
+
+NHANES
+
+```{r}
+data <- nhanes
+headTail(data, tlength = 10) # from `psych` package
+```
+
+
+
+```{r, eval = FALSE}
+
+## DON'T DO THIS!!
+imp <- mice(nhanes)
+```
+
+
+### Seven steps:
+1. Ignorable or nonignorable?
+2. Model form
+3. Predictors
+4. Derived variables
+5. Imputation order 
+6. Starting values and number of iterations
+7. Number of imputations
+
+
+```{r, eval = FALSE}
+imp <- mice(data = nhanes,        # data
+            m = 5,               # number of imputations
+            method = ,            # vector of imputation methods 
+                                  #  for each variable
+            predictorMatrix = ,   #
+            visitSequence = ,     # order of imputations
+            maxit = 5,             # number of iterations
+            seed = ,              # random number seed
+            data.init =           # data frame with starting values
+              )
+```
+
+```{r}
+imp0 <- mice(data = nhanes, maxit = 0)
+predMat <- imp0$pred
+predMat
+
+imp0$method
+
+meth <- imp0$method
+meth[3] <- "norm"
+meth
+```
+
+```{r}
+imp <- mice(data = nhanes, m = 5, maxit = 10, seed = 20151110)
+str(imp)
+```
+
+
+
+
+
+
+```{r echo=FALSE}
+sessionInfo()  # could use devtools::session_info() if you prefer that
+```
+  
