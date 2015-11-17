@@ -121,6 +121,7 @@ str(imp)
 ### Trace plots
 
 *Diagnosing Convergence* 
+
 1. Different chains should mix well (freely intermingle)
 2. Chains should not show trends
 3. Variance between chains is no larger than variance within chains.
