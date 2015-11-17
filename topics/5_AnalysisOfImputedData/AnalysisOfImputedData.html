@@ -86,8 +86,7 @@ options(ztable.type = doctype)</code></pre>
 <div id="data-example" class="section level2">
 <h2>Data example</h2>
 <p>NHANES</p>
-<pre class="r"><code>data &lt;- nhanes
-headTail(data, tlength = 10) # from `psych` package</code></pre>
+<pre class="r"><code>headTail(nhanes, tlength = 10) # from `psych` package</code></pre>
 <pre><code>    age  bmi  hyp  chl
 1     1 &lt;NA&gt; &lt;NA&gt; &lt;NA&gt;
 2     2 22.7    1  187
@@ -104,6 +103,111 @@ headTail(data, tlength = 10) # from `psych` package</code></pre>
 23    1 27.5    1  131
 24    3 24.9    1 &lt;NA&gt;
 25    2 27.4    1  186</code></pre>
+<pre class="r"><code>md.pattern(nhanes)</code></pre>
+<pre><code>   age hyp bmi chl   
+13   1   1   1   1  0
+ 1   1   1   0   1  1
+ 3   1   1   1   0  1
+ 1   1   0   0   1  2
+ 7   1   0   0   0  3
+     0   8   9  10 27</code></pre>
+<pre class="r"><code>lmfit &lt;- lm(chl~bmi+age,data=nhanes)</code></pre>
+<pre class="r"><code>htmlreg(lmfit, custom.model.names = &quot;listwise&quot;)</code></pre>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<table cellspacing="0" align="center" style="border: none;">
+<caption align="bottom" style="margin-top:0.3em;">
+Statistical models
+</caption>
+<tr>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+</th>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+<b>listwise</b>
+</th>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+(Intercept)
+</td>
+<td style="padding-right: 12px; border: none;">
+-80.19
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(58.77)
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+bmi
+</td>
+<td style="padding-right: 12px; border: none;">
+6.88<sup style="vertical-align: 0px;">**</sup>
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(1.85)
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+age
+</td>
+<td style="padding-right: 12px; border: none;">
+53.07<sup style="vertical-align: 0px;">***</sup>
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(11.29)
+</td>
+</tr>
+<tr>
+<td style="border-top: 1px solid black;">
+R<sup style="vertical-align: 0px;">2</sup>
+</td>
+<td style="border-top: 1px solid black;">
+0.73
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+Adj. R<sup style="vertical-align: 0px;">2</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
+0.68
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+Num. obs.
+</td>
+<td style="padding-right: 12px; border: none;">
+13
+</td>
+</tr>
+<tr>
+<td style="border-bottom: 2px solid black;">
+RMSE
+</td>
+<td style="border-bottom: 2px solid black;">
+27.67
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;" colspan="2">
+<span style="font-size:0.8em"><sup style="vertical-align: 0px;"><em><strong></sup>p &lt; 0.001, <sup style="vertical-align: 0px;"></strong></sup>p &lt; 0.01, <sup style="vertical-align: 0px;"></em></sup>p &lt; 0.05</span>
+</td>
+</tr>
+</table>
 <pre class="r"><code>imp &lt;- mice(data = nhanes, m = 5, maxit = 20, seed = 20151110, 
             printFlag = FALSE)</code></pre>
 <pre class="r"><code>plot(imp)</code></pre>
@@ -120,60 +224,136 @@ headTail(data, tlength = 10) # from `psych` package</code></pre>
 <li><p>Stack data sets</p></li>
 </ol>
 <pre class="r"><code>stacked &lt;- complete(imp, &quot;long&quot;)
-fit &lt;- lm(chl~bmi+age,data=stacked)
-htmlreg(fit)</code></pre>
-<pre><code>
-&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot; &quot;http://www.w3.org/TR/html4/loose.dtd&quot;&gt;
-&lt;table cellspacing=&quot;0&quot; align=&quot;center&quot; style=&quot;border: none;&quot;&gt;
-&lt;caption align=&quot;bottom&quot; style=&quot;margin-top:0.3em;&quot;&gt;Statistical models&lt;/caption&gt;
-&lt;tr&gt;
-&lt;th style=&quot;text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;&quot;&gt;&lt;/th&gt;
-&lt;th style=&quot;text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;&quot;&gt;&lt;b&gt;Model 1&lt;/b&gt;&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;(Intercept)&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;-17.68&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;(23.81)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;bmi&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;5.70&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;(0.77)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;age&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;33.62&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;(3.88)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;border-top: 1px solid black;&quot;&gt;R&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;2&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=&quot;border-top: 1px solid black;&quot;&gt;0.44&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;Adj. R&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;2&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;0.43&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;Num. obs.&lt;/td&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;125&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;border-bottom: 2px solid black;&quot;&gt;RMSE&lt;/td&gt;
-&lt;td style=&quot;border-bottom: 2px solid black;&quot;&gt;32.98&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=&quot;padding-right: 12px; border: none;&quot; colspan=&quot;2&quot;&gt;&lt;span style=&quot;font-size:0.8em&quot;&gt;&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;p &amp;lt; 0.001, &lt;sup style=&quot;vertical-align: 0px;&quot;&gt;**&lt;/sup&gt;p &amp;lt; 0.01, &lt;sup style=&quot;vertical-align: 0px;&quot;&gt;*&lt;/sup&gt;p &amp;lt; 0.05&lt;/span&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/table&gt;</code></pre>
+stackfit &lt;- lm(chl~bmi+age,data=stacked)
+htmlreg(list(lmfit, stackfit), custom.model.names = c(&quot;listwise&quot;, &quot;stacked&quot;))</code></pre>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<table cellspacing="0" align="center" style="border: none;">
+<caption align="bottom" style="margin-top:0.3em;">
+Statistical models
+</caption>
+<tr>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+</th>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+<b>listwise</b>
+</th>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+<b>stacked</b>
+</th>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+(Intercept)
+</td>
+<td style="padding-right: 12px; border: none;">
+-80.19
+</td>
+<td style="padding-right: 12px; border: none;">
+-17.68
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(58.77)
+</td>
+<td style="padding-right: 12px; border: none;">
+(23.81)
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+bmi
+</td>
+<td style="padding-right: 12px; border: none;">
+6.88<sup style="vertical-align: 0px;">**</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
+5.70<sup style="vertical-align: 0px;">***</sup>
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(1.85)
+</td>
+<td style="padding-right: 12px; border: none;">
+(0.77)
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+age
+</td>
+<td style="padding-right: 12px; border: none;">
+53.07<sup style="vertical-align: 0px;">***</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
+33.62<sup style="vertical-align: 0px;">***</sup>
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(11.29)
+</td>
+<td style="padding-right: 12px; border: none;">
+(3.88)
+</td>
+</tr>
+<tr>
+<td style="border-top: 1px solid black;">
+R<sup style="vertical-align: 0px;">2</sup>
+</td>
+<td style="border-top: 1px solid black;">
+0.73
+</td>
+<td style="border-top: 1px solid black;">
+0.44
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+Adj. R<sup style="vertical-align: 0px;">2</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
+0.68
+</td>
+<td style="padding-right: 12px; border: none;">
+0.43
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+Num. obs.
+</td>
+<td style="padding-right: 12px; border: none;">
+13
+</td>
+<td style="padding-right: 12px; border: none;">
+125
+</td>
+</tr>
+<tr>
+<td style="border-bottom: 2px solid black;">
+RMSE
+</td>
+<td style="border-bottom: 2px solid black;">
+27.67
+</td>
+<td style="border-bottom: 2px solid black;">
+32.98
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;" colspan="3">
+<span style="font-size:0.8em"><sup style="vertical-align: 0px;"><em><strong></sup>p &lt; 0.001, <sup style="vertical-align: 0px;"></strong></sup>p &lt; 0.01, <sup style="vertical-align: 0px;"></em></sup>p &lt; 0.05</span>
+</td>
+</tr>
+</table>
 </div>
 <div id="repeated-analyses-what-you-should-do" class="section level2">
 <h2>Repeated Analyses: What you <strong>SHOULD</strong> do</h2>
@@ -244,7 +424,7 @@ unlist(out$analyses)</code></pre>
 <pre class="r"><code>mids2spss(imp, path = &quot;data/spssData/&quot;)</code></pre>
 <pre class="r"><code>source(&quot;~/FOCAL/Rpackages/cpar/R/miralm.R&quot;)
 miralmObj &lt;- miralm(mira = fit, n.obs = 25)
-htmlreg(miralmObj)</code></pre>
+htmlreg(list(lmfit, stackfit, miralmObj), custom.model.names = c(&quot;listwise&quot;, &quot;stacked&quot;, &quot;mice&quot;))</code></pre>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <table cellspacing="0" align="center" style="border: none;">
 <caption align="bottom" style="margin-top:0.3em;">
@@ -254,7 +434,13 @@ Statistical models
 <th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
 </th>
 <th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
-<b>Model 1</b>
+<b>listwise</b>
+</th>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+<b>stacked</b>
+</th>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+<b>mice</b>
 </th>
 </tr>
 <tr>
@@ -262,11 +448,23 @@ Statistical models
 (Intercept)
 </td>
 <td style="padding-right: 12px; border: none;">
+-80.19
+</td>
+<td style="padding-right: 12px; border: none;">
+-17.68
+</td>
+<td style="padding-right: 12px; border: none;">
 -14.45
 </td>
 </tr>
 <tr>
 <td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(58.77)
+</td>
+<td style="padding-right: 12px; border: none;">
+(23.81)
 </td>
 <td style="padding-right: 12px; border: none;">
 (71.23)
@@ -277,11 +475,23 @@ Statistical models
 bmi
 </td>
 <td style="padding-right: 12px; border: none;">
+6.88<sup style="vertical-align: 0px;">**</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
+5.70<sup style="vertical-align: 0px;">***</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
 5.58<sup style="vertical-align: 0px;">*</sup>
 </td>
 </tr>
 <tr>
 <td style="padding-right: 12px; border: none;">
+</td>
+<td style="padding-right: 12px; border: none;">
+(1.85)
+</td>
+<td style="padding-right: 12px; border: none;">
+(0.77)
 </td>
 <td style="padding-right: 12px; border: none;">
 (2.28)
@@ -292,6 +502,12 @@ bmi
 age
 </td>
 <td style="padding-right: 12px; border: none;">
+53.07<sup style="vertical-align: 0px;">***</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
+33.62<sup style="vertical-align: 0px;">***</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
 33.67<sup style="vertical-align: 0px;">*</sup>
 </td>
 </tr>
@@ -299,35 +515,72 @@ age
 <td style="padding-right: 12px; border: none;">
 </td>
 <td style="padding-right: 12px; border: none;">
+(11.29)
+</td>
+<td style="padding-right: 12px; border: none;">
+(3.88)
+</td>
+<td style="padding-right: 12px; border: none;">
 (10.80)
 </td>
 </tr>
 <tr>
 <td style="border-top: 1px solid black;">
-Num. obs.
-</td>
-<td style="border-top: 1px solid black;">
-25
-</td>
-</tr>
-<tr>
-<td style="padding-right: 12px; border: none;">
 R<sup style="vertical-align: 0px;">2</sup>
 </td>
-<td style="padding-right: 12px; border: none;">
+<td style="border-top: 1px solid black;">
+0.73
+</td>
+<td style="border-top: 1px solid black;">
+0.44
+</td>
+<td style="border-top: 1px solid black;">
 0.46
 </td>
 </tr>
 <tr>
-<td style="border-bottom: 2px solid black;">
+<td style="padding-right: 12px; border: none;">
 Adj. R<sup style="vertical-align: 0px;">2</sup>
 </td>
-<td style="border-bottom: 2px solid black;">
+<td style="padding-right: 12px; border: none;">
+0.68
+</td>
+<td style="padding-right: 12px; border: none;">
+0.43
+</td>
+<td style="padding-right: 12px; border: none;">
 0.41
 </td>
 </tr>
 <tr>
-<td style="padding-right: 12px; border: none;" colspan="2">
+<td style="padding-right: 12px; border: none;">
+Num. obs.
+</td>
+<td style="padding-right: 12px; border: none;">
+13
+</td>
+<td style="padding-right: 12px; border: none;">
+125
+</td>
+<td style="padding-right: 12px; border: none;">
+25
+</td>
+</tr>
+<tr>
+<td style="border-bottom: 2px solid black;">
+RMSE
+</td>
+<td style="border-bottom: 2px solid black;">
+27.67
+</td>
+<td style="border-bottom: 2px solid black;">
+32.98
+</td>
+<td style="border-bottom: 2px solid black;">
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;" colspan="4">
 <span style="font-size:0.8em"><sup style="vertical-align: 0px;"><em><strong></sup>p &lt; 0.001, <sup style="vertical-align: 0px;"></strong></sup>p &lt; 0.01, <sup style="vertical-align: 0px;"></em></sup>p &lt; 0.05</span>
 </td>
 </tr>

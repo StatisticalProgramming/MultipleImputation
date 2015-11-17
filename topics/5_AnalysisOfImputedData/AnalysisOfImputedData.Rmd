@@ -64,8 +64,14 @@ options(ztable.type = doctype)
 NHANES
 
 ```{r}
-data <- nhanes
-headTail(data, tlength = 10) # from `psych` package
+
+headTail(nhanes, tlength = 10) # from `psych` package
+md.pattern(nhanes)
+lmfit <- lm(chl~bmi+age,data=nhanes)
+```
+
+```{r, results='asis'}
+htmlreg(lmfit, custom.model.names = "listwise")
 ```
 
 
@@ -88,10 +94,10 @@ densityplot(imp)
 1. Average data sets
 
 2. Stack data sets
-```{r}
+```{r, results='asis'}
 stacked <- complete(imp, "long")
-fit <- lm(chl~bmi+age,data=stacked)
-htmlreg(fit)
+stackfit <- lm(chl~bmi+age,data=stacked)
+htmlreg(list(lmfit, stackfit), custom.model.names = c("listwise", "stacked"))
 ```
 
 ## Repeated Analyses: What you **SHOULD** do
@@ -169,7 +175,7 @@ mids2spss(imp, path = "data/spssData/")
 ```{r, results = 'asis'}
 source("~/FOCAL/Rpackages/cpar/R/miralm.R")
 miralmObj <- miralm(mira = fit, n.obs = 25)
-htmlreg(miralmObj)
+htmlreg(list(lmfit, stackfit, miralmObj), custom.model.names = c("listwise", "stacked", "mice"))
 ```
 
 ```{r echo=FALSE}
