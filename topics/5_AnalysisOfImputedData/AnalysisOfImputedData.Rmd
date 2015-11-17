@@ -1,0 +1,180 @@
+---
+title: "Analsis of Imputed Data"
+author: "William Murrah"
+date: ''
+output:
+  html_document:
+    fig_height: 6
+    fig_width: 6
+  pdf_document:
+    fig_height: 6
+    fig_width: 6
+  word_document:
+    fig_height: 6
+    fig_width: 6
+bibliography: ref.bib    
+---
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_knit$set(root.dir = "../../")
+opts_chunk$set(
+  message = FALSE,
+  comment = NULL,
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+## Packages we will use:
+```{r}
+require(texreg)  
+require(mice)
+require(VIM)
+require(ztable)
+require(lattice)
+require(mice)
+require(psych)
+require(miceadds)
+source("~/Rfunc/miralm.R")
+```
+
+```{r}
+doctype <- 
+   # "latex"
+   "html"
+txreg <- ifelse(doctype == "latex", texreg, htmlreg)
+options(ztable.type = doctype)
+```
+
+
+## Data example
+
+NHANES
+
+```{r}
+data <- nhanes
+headTail(data, tlength = 10) # from `psych` package
+```
+
+
+
+```{r, cache=TRUE}
+imp <- mice(data = nhanes, m = 5, maxit = 20, seed = 20151110, 
+            printFlag = FALSE)
+```
+
+
+```{r}
+plot(imp)
+stripplot(imp)
+densityplot(imp)
+```
+
+
+## What **NOT** to do with imputed data
+
+1. Average data sets
+
+2. Stack data sets
+```{r}
+stacked <- complete(imp, "long")
+fit <- lm(chl~bmi+age,data=stacked)
+htmlreg(fit)
+```
+
+## Repeated Analyses: What you **SHOULD** do
+
+The appropriate way to analyze MI data is to do repeated analyses and pool parameter estimates.
+
+The following block quote is from @molenberghs2014handbook.
+
+Multiple imputation is a procedure that enables the user to carry on with their standard
+analysis almost as if the dataset contained no missing values. The method proceeds as
+follows:
+
+> 1. Create a number ($m$) of copies of the incomplete dataset, and use an appropriate
+procedure to impute (fill in) the missing values in each of these copies. Since we do
+not know the true values that are missing it seems reasonable that the imputed values
+used in each copy should in general be different from each other.
+
+> 2. For each completed (imputed) copy of the dataset, carry out the standard analysis
+that would have been performed in the absence of missing values, and store the parameter
+estimates of interest, along with their estimated standard errors (or variance/covariance
+matrix in the case of a multivariate parameter of interest). Here ... the focus will be on a single (univariate) parameter of interest,
+which we denote $\beta$. The estimate of $\beta$ obtained from the $k^{th}(k = 1, . . .,m)$ completed
+dataset is denoted $\beta^{(k)}$ and its (estimated) variance $V^{(k)}$. (Note that this step implicitly
+assumes that the inference desired from the analysis can be effectively reduced
+to a parameter estimate and standard error.)
+
+> 3. Use a pair of formulas widely known as "Rubin's rules,"" firstly to create a combined
+estimate of the parameter, as the average of the $m$ separate estimates:
+
+$$
+\hat{\beta}^{MI} = \frac{1}{m} \sum_1^m \hat{\beta}^{(K)},
+$$
+
+> and then to obtain a standard error for this estimate, as the square root of  the following combined variance estimate:
+
+$$
+V^{(MI)} = \bar{V} + \left(1 + \frac{1}{m} \right)B,
+$$
+
+> where $\bar{V} = \sum_1^m V^{(k)}/m$, and $B = \sum_1^m (\hat{\beta}^{k} - \hat{\beta}^{MI})^2/(m - 1)$, which is an estimate of the *between-imputation* variance of the parameter of interest. In general multiple-imputation inference proceeds in the usual way from these results, by forming test statistics and confidence intervals under the assumption that $(\hat{\beta}^{MI} - \beta)/\sqrt{V^{MI}}$ follows either a standard normal or $t$ distribution.
+
+### Repeated Analyses:
+```{r}
+fit <- with(imp, lm(chl ~ bmi + age))
+# Grab estimates from first analysis:
+coef(fit$analyses[[1]])
+
+# Grab estimates from second analysis:
+coef(fit$analyses[[2]])
+```
+
+### Pool estimates:
+```{r}
+est <- pool(fit)
+summary(est)
+```
+
+### Using other functions on imputed data:
+```{r}
+expr <- expression(mean.bmi <- mean(bmi))
+out <- with(imp, eval(expr))
+unlist(out$analyses)
+mean(unlist(out$analyses))
+```
+
+
+```{r, eval = FALSE}
+mids2mplus(imp, path = "data/mplusData/")
+```
+
+```{r, eval=FALSE}
+mids2spss(imp, path = "data/spssData/")
+```
+
+```{r, results = 'asis'}
+source("~/FOCAL/Rpackages/cpar/R/miralm.R")
+miralmObj <- miralm(mira = fit, n.obs = 25)
+htmlreg(miralmObj)
+```
+
+```{r echo=FALSE}
+sessionInfo()  # could use devtools::session_info() if you prefer that
+```
+  
+# References  
+  

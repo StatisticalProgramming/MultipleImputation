@@ -39,6 +39,7 @@ opts_chunk$set(
 ## Packages we will use:
 ```{r}
 require(texreg)  
+require(lattice)
 require(mice)
 require(VIM)
 require(ztable)
@@ -115,9 +116,50 @@ str(imp)
 ```
 
 
+## Diagnostics
+
+### Trace plots
+
+*Diagnosing Convergence* 
+1. Different chains should mix well (freely intermingle)
+2. Chains should not show trends
+3. Variance between chains is no larger than variance within chains.
+
+#### Poor or No convergence
+
+```{r, echo = FALSE, cache = TRUE}
+ini <- mice(boys,max=0,print=FALSE)
+meth <- ini$meth
+meth["bmi"] <- "~I(wgt/(hgt/100)^2)"
+imp.bmi1 <- mice(boys, meth=meth, maxit=20, seed=60109, printFlag = FALSE)
+
+### Figure 5.7
+### Does not reproduce exactly, but the message is the same
+plot(imp.bmi1,c("hgt","wgt","bmi"), col=mdc(5), lty=1:5)
+```
+
+#### Healthy convergence
+
+```{r, echo = FALSE, cache = TRUE}
+pred <- ini$pred
+pred[c("hgt","wgt"),"bmi"] <- 0
+imp.bmi2 <- mice(boys, meth=meth, pred=pred, maxit=20, seed=60109, 
+                 printFlag = FALSE)
+plot(imp.bmi2,c("hgt","wgt","bmi"), col=mdc(5), lty=1:5)
+```
+
+### Stripplots
+
+```{r}
+stripplot(imp.bmi2)
+```
 
 
+### Density plots
 
+```{r}
+densityplot(imp.bmi2)
+```
 
 ```{r echo=FALSE}
 sessionInfo()  # could use devtools::session_info() if you prefer that

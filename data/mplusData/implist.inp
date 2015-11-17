@@ -1,0 +1,3 @@
+DATA: FILE IS implist.dat;
+TYPE = IMPUTATION;
+VARIABLE: NAMES ARE age bmi hyp chl;

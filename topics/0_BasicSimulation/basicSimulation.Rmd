@@ -38,7 +38,7 @@ opts_chunk$set(
 )
 # This loads the mosaic data sets.  (Could be deleted if you are not using them.)
 library(texreg)
-library(stargazer)               
+library(stargazer)              
 ```
 
 ## Why do I need to know how to simulate data?
@@ -167,4 +167,7 @@ range(geread)
 ```{r echo=FALSE}
 sessionInfo()  # could use devtools::session_info() if you prefer that
 ```
-  
+
+    
+
+

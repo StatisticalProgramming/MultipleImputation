@@ -1,0 +1,16 @@
+base
+dplyr
+lattice
+ggplot2
+car
+mosaicData
+mosaic
+knitr
+texreg
+Rcpp
+mice
+colorspace
+data.table
+VIM
+ztable
+psych
